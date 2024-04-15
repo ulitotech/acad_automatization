@@ -2,10 +2,12 @@ import win32com.client
 from pypdf import PdfWriter
 from os import listdir, remove
 from os.path import isfile, join, exists, isdir
+from typing import Union
 
 # app = win32com.client.Dispatch('AutoCAD.Application')
 # doc = app.Documents.Open(r"C:\Users\IProkopyev\Desktop\Новая папка (2)\04_Адресный список.dwg")
 # act_doc = app.ActiveDocument
+
 # try:
 #     pass
 # except Exception as e:
@@ -44,12 +46,30 @@ from os.path import isfile, join, exists, isdir
 #             print(table.Rows, table.Columns)
 #             table.SetCellValue(4, 4, "KU")
 """Количество задействованных листов (220 - высота разбиения таблицы"""
-# for a in act_doc.ModelSpace:
-#     if a.ObjectName == 'AcDbTable':
-#         table = a
-#         print(table.Height)
-#         print(round(int(table.Height) / 220) + 1)
-"""Соединение PDF в один файл"""
+
+
+def sheet_counting(active_document: win32com.client.CDispatch, height: Union[int, str] = 220) -> int:
+    """Counting of sheets from a table size
+    :param height: table height (in mm)
+    :param active_document: Autocad document object
+    """
+    try:
+        if not isinstance(active_document, win32com.client.CDispatch):
+            raise TypeError("Object doesn't belong to the win32com.client.CDispatch")
+        if not type(height) not in (str, int):
+            raise TypeError("height must be an integer")
+        if type(height) == str:
+            height = int(height)
+        sheets_amount: int = 0
+        for a_d in active_document.ModelSpace:
+            if a_d.ObjectName == 'AcDbTable':
+                table = a_d
+                sheets_amount = int((int(table.Height) / height) + 1)
+        return sheets_amount
+    except Exception as e:
+        print(f"###Error in sheet_counting function###\n*****{e}*****")
+    finally:
+        pass
 
 def merge_pdf_files(path: str, project_code: str):
     """Merging files into a PDF file
@@ -65,7 +85,7 @@ def merge_pdf_files(path: str, project_code: str):
             raise FileNotFoundError("There is no such folder")
         if set(project_code).intersection(r'\\/:*?"<>|'):
             raise ValueError("Incorrect result file name")
-        result_file_path = join(path,f'{project_code}.pdf')
+        result_file_path = join(path, f'{project_code}.pdf')
         files = [join(path, f) for f in listdir(path) if (isfile(join(path, f)) and f.endswith('.pdf'))]
         if files == []:
             raise ValueError("File list is empty")
@@ -80,6 +100,6 @@ def merge_pdf_files(path: str, project_code: str):
             merger.write(result_file_path)
             merger.close()
     except Exception as e:
-        print(f"###Error in merge_pdf_files###\n*****{e}*****")
+        print(f"###Error in merge_pdf_files function###\n*****{e}*****")
     finally:
         pass
