@@ -9,6 +9,7 @@ step_description = {'1step': 'Выбери папку с шаблонами',
                     '2step': 'Выбери папку с исходными данными',
                     '3step': 'Выбери папку для сохранения проектов'}
 images = {'icons': {}, 'progress': {}}
+sounds = []
 fonts = []
 
 
@@ -19,6 +20,7 @@ class Settings:
     fonts: list[dict[str:str]]
     step_description: dict[str:str]
     images: dict[str:dict[str:str]]
+    sounds: list
 
 
 def load_settings() -> Settings:
@@ -34,10 +36,16 @@ def load_settings() -> Settings:
                         images['progress'][f[:-4]] = os.path.join(dir, f)
                     else:
                         images['icons'][f[:-4]] = os.path.join(dir, f)
+        if dir.endswith('sounds'):
+            for f in os.listdir(dir):
+                if f.endswith('.mp3'):
+                    sounds.append(os.path.join(dir, f))
+
     return Settings(
         colors=colors,
         window_size=window_size,
         fonts=fonts,
         step_description=step_description,
-        images=images
+        images=images,
+        sounds=sounds
     )
